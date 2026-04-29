@@ -239,6 +239,7 @@ export default function SuperAdmin() {
 
       // Create subscription if billing columns available
       try {
+        const isFreePlan = (req.selected_plan || "").toLowerCase() === "free";
         const periodStart = new Date();
         const periodEnd = new Date(periodStart);
         periodEnd.setMonth(periodEnd.getMonth() + 1);
@@ -248,16 +249,16 @@ export default function SuperAdmin() {
           .insert({
             organization_id: orgData.id,
             request_id: req.id,
-            plan_id: req.selected_plan || "professional",
+            plan_id: req.selected_plan || "free",
             status: "active",
-            amount: req.payment_amount || 0,
-            currency: req.payment_currency || "USD",
+            amount: isFreePlan ? 0 : req.payment_amount || 0,
+            currency: req.selected_currency || req.payment_currency || "USD",
             current_period_start: periodStart.toISOString(),
-            current_period_end: periodEnd.toISOString(),
-            next_billing_at: periodEnd.toISOString(),
-            payment_provider: req.payment_provider || "paystack",
-            payment_reference: req.payment_reference || req.paystack_reference || null,
-            paystack_reference: req.paystack_reference || null,
+            current_period_end: isFreePlan ? null : periodEnd.toISOString(),
+            next_billing_at: isFreePlan ? null : periodEnd.toISOString(),
+            payment_provider: isFreePlan ? "free" : req.payment_provider || "paystack",
+            payment_reference: isFreePlan ? null : req.payment_reference || req.paystack_reference || null,
+            paystack_reference: isFreePlan ? null : req.paystack_reference || null,
           });
       } catch (_) {
         // Subscription table may not exist yet — safe to skip
@@ -629,7 +630,7 @@ export default function SuperAdmin() {
                           <p className="font-bold text-slate-900 text-lg truncate">{req.company_name}</p>
                           <p className="text-sm font-medium text-slate-500 truncate">{req.admin_name} • {req.email}</p>
                           <p className="text-xs font-semibold text-slate-500 mt-1 uppercase tracking-wider">
-                            Plan: {req.selected_plan || "professional"} • Gateway: paystack • Payment: {req.payment_status || "unpaid"}
+                            Plan: {req.selected_plan || "free"} • Gateway: {req.payment_provider || "free"} • Payment: {req.payment_status || "free"}
                           </p>
                           <p className="text-xs font-semibold text-slate-400 mt-1 uppercase tracking-wider">
                             {new Date(req.created_at).toLocaleDateString()} at {new Date(req.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
@@ -671,8 +672,7 @@ export default function SuperAdmin() {
                             <Button
                               size="sm"
                               onClick={() => approveCompany(req)}
-                              disabled={req.payment_status !== "paid"}
-                              className="h-10 px-5 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl shadow-sm disabled:opacity-60 disabled:cursor-not-allowed"
+                              className="h-10 px-5 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl shadow-sm"
                             >
                               <CheckCircle2 className="h-4 w-4 mr-2" /> Approve
                             </Button>

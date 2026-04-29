@@ -74,7 +74,19 @@ export async function loadBillingPlans(currency = DEFAULT_CURRENCY): Promise<Bil
         highlighted: !!row.highlighted,
       };
     })
-    .filter((row) => row.id === "starter" || row.id === "professional" || row.id === "enterprise");
+    .filter(
+      (row) =>
+        row.id === "free" ||
+        row.id === "starter" ||
+        row.id === "professional" ||
+        row.id === "enterprise",
+    );
+
+  // Keep the built-in free plan available even when older DB rows don't include it yet.
+  const defaultFreePlan = BILLING_PLANS.find((plan) => plan.id === "free");
+  if (defaultFreePlan && !mapped.some((plan) => plan.id === "free")) {
+    mapped.unshift(defaultFreePlan);
+  }
 
   return mapped.length > 0 ? mapped : BILLING_PLANS;
 }

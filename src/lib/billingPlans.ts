@@ -1,4 +1,4 @@
-export type BillingPlanId = "starter" | "professional" | "enterprise";
+export type BillingPlanId = "free" | "starter" | "professional" | "enterprise";
 
 export interface BillingPlan {
   id: BillingPlanId;
@@ -27,6 +27,25 @@ export function formatMoneyMinor(amountMinor: number, currency: string) {
 }
 
 export const BILLING_PLANS: BillingPlan[] = [
+  {
+    id: "free",
+    name: "Free",
+    amountMinor: 0,
+    currency: "USD",
+    priceLabel: "Free",
+    periodLabel: "/forever",
+    description: "Unlimited usage with no payment required.",
+    features: [
+      "Unlimited counters",
+      "Unlimited services",
+      "Unlimited tokens",
+      "Queue display + kiosk",
+      "Staff management",
+      "Reports and analytics",
+    ],
+    cta: "Start Free",
+    highlighted: true,
+  },
   {
     id: "starter",
     name: "Starter",
@@ -96,4 +115,4 @@ export const BILLING_PLAN_BY_ID = BILLING_PLANS.reduce(
   {} as Record<BillingPlanId, BillingPlan>,
 );
 
-export const DEFAULT_PLAN_ID: BillingPlanId = "professional";
+export const DEFAULT_PLAN_ID: BillingPlanId = "free";

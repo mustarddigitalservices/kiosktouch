@@ -57,6 +57,7 @@ This project includes dynamic billing with:
 
 Default plans:
 
+- free (0 / forever, unlimited)
 - starter (NGN 29,000 / month)
 - professional (NGN 79,000 / month)
 - enterprise (NGN 199,000 / month)
@@ -64,11 +65,17 @@ Default plans:
 ### Included billing flow
 
 - Plan selection on company signup
+- Unlimited free-plan onboarding without payment checkout
 - Secure payment initialization through Supabase Edge Function
 - Redirect to Paystack checkout
 - Callback verification and payment status updates
-- Super admin approval restricted to paid requests
+- Super admin approval supports both paid and free requests
 - Subscription creation on approval
+
+### Admin login credentials
+
+- Company admin username and password are the email/password entered during company signup.
+- Super admin credentials are the email/password of the account that has the `super_admin` role in `public.user_roles`.
 
 ### Required Supabase secrets
 

@@ -66,6 +66,7 @@ export default function CompanySignup() {
     () => plans.find((p) => p.id === selectedPlanId) ?? BILLING_PLAN_BY_ID[selectedPlanId],
     [plans, selectedPlanId],
   );
+  const isFreePlan = selectedPlan.amountMinor === 0;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -108,9 +109,9 @@ export default function CompanySignup() {
         ...basePayload,
         selected_plan: selectedPlan.id,
         selected_currency: selectedCurrency,
-        payment_provider: "paystack",
-        payment_status: "paid",          // valid enum value — treated as approved
-        payment_amount: selectedPlan.amountMinor,
+        payment_provider: isFreePlan ? "free" : "paystack",
+        payment_status: isFreePlan ? "free" : "paid",
+        payment_amount: isFreePlan ? 0 : selectedPlan.amountMinor,
         payment_currency: selectedCurrency,
       };
 
@@ -149,7 +150,7 @@ export default function CompanySignup() {
         .limit(1)
         .maybeSingle();
 
-      if (created) {
+      if (created && !isFreePlan) {
         const { data: paymentInit } = await supabase.functions.invoke(
           "payment-initialize",
           { body: { requestId: created.id, provider: "paystack" } },
@@ -500,15 +501,21 @@ export default function CompanySignup() {
             {currentStep === 2 && (
               <div className="space-y-6 animate-fade-up">
                 <div>
-                  <h2 className="text-3xl font-black font-display text-slate-900 drop-shadow-sm">Review & Pay</h2>
-                  <p className="text-sm font-medium text-slate-500 mt-1">Confirm your details before proceeding.</p>
+                  <h2 className="text-3xl font-black font-display text-slate-900 drop-shadow-sm">
+                    {isFreePlan ? "Review & Continue" : "Review & Pay"}
+                  </h2>
+                  <p className="text-sm font-medium text-slate-500 mt-1">
+                    {isFreePlan
+                      ? "Confirm your details and continue with the unlimited free plan."
+                      : "Confirm your details before proceeding."}
+                  </p>
                 </div>
 
                 <div className="rounded-2xl border border-slate-200 bg-slate-50 p-6 space-y-4 shadow-sm">
                   {[
                     { label: "Plan", value: `${selectedPlan.name} (${selectedPlan.priceLabel}${selectedPlan.periodLabel})` },
                     { label: "Currency", value: selectedCurrency },
-                    { label: "Gateway", value: providerLabel(selectedProvider) },
+                    { label: "Gateway", value: isFreePlan ? "No payment required" : providerLabel(selectedProvider) },
                     { label: "Company", value: form.company_name },
                     { label: "Admin Name", value: form.admin_name },
                     { label: "Email", value: form.email },
@@ -525,7 +532,9 @@ export default function CompanySignup() {
                     <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
                   </svg>
                   <p className="text-xs font-semibold text-blue-700">
-                    Your payment is secured by Paystack with 256-bit SSL encryption.
+                    {isFreePlan
+                      ? "You selected the unlimited free plan. No payment checkout is required."
+                      : "Your payment is secured by Paystack with 256-bit SSL encryption."}
                   </p>
                 </div>
 
@@ -556,7 +565,7 @@ export default function CompanySignup() {
                         Processing...
                       </span>
                     ) : (
-                      "Continue to Paystack"
+                      isFreePlan ? "Continue with Free Plan" : "Continue to Paystack"
                     )}
                   </Button>
                 </div>
